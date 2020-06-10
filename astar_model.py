@@ -9,13 +9,13 @@ class AStarModel:
         self.__view = view
 
         # Validate arguments
-        if nRow < 1:
+        if nRow < 2:
             raise ValueError(
-                "There must be at least 1 row. Received {} rows instead.".format(nRow))
+                'There must be at least 2 rows. Received {} rows instead.'.format(nRow))
 
-        if nCol < 1:
+        if nCol < 2:
             raise ValueError(
-                "There must be at least 1 column. Received {} columns instead.".format(nCol))
+                'There must be at least 2 columns. Received {} columns instead.'.format(nCol))
 
         self.__nRow = nRow
         self.__nCol = nCol
@@ -37,25 +37,25 @@ class AStarModel:
         self.path = []
 
         self.__settings = {
-            "allowDiagonals": True,
-            "enablePrintToConsole": True
+            'allowDiagonals': True,
+            'enablePrintToConsole': True
         }
 
         self.__stats = {
-            "numUnsolved": 0,
-            "numSolved": 0,
-            "numPath": 0,
-            "elapsedTime": 0
+            'numUnsolved': 0,
+            'numSolved': 0,
+            'numPath': 0,
+            'elapsedTime': 0
         }
 
-        # Initialize a 2D array representing the walls in the maze
+        # Initialize a set containing wall positions
         self.__walls = set()
 
         # Initialize a 2D containing symbols representing the maze
         self.__initialize_maze()
 
     def __initialize_maze(self):
-        """ Initializes a 2D array representing the maze.
+        ''' Initializes a 2D array representing the maze.
 
         Initially, the maze only contains [space] characters
         in addition to the start and end characters.
@@ -65,14 +65,14 @@ class AStarModel:
 
         Returns:
             None
-        """
-        self.__curr_maze = [[" "] * self.__nCol for _ in range(self.__nRow)]
+        '''
+        self.__curr_maze = [[' '] * self.__nCol for _ in range(self.__nRow)]
         self.__prev_maze = self.__curr_maze
-        self.__curr_maze[self.__start[0]][self.__start[1]] = "S"
-        self.__curr_maze[self.__end[0]][self.__end[1]] = "E"
+        self.__curr_maze[self.__start[0]][self.__start[1]] = 'S'
+        self.__curr_maze[self.__end[0]][self.__end[1]] = 'E'
 
     def __update_maze(self, is_rapid_config):
-        """ Updates the maze array to reflect the current search state.
+        ''' Updates the maze array to reflect the current search state.
 
         By maintaining the maze array, the GUI can be easily updated
         after each iteration of the search.
@@ -87,66 +87,67 @@ class AStarModel:
             P - Path
 
         Args:
-            None
+            is_rapid_config::[bool]
+                Calls update_idletasks() on the GUI if true, and update() if false
 
         Returns:
             None
-        """
+        '''
         # Update stats
         self.__update_stats()
 
         # Store current maze into previous maze
         self.__prev_maze = self.__curr_maze
 
-        # Clear potentially removed symbols ("S", "E", or "W")
-        self.__curr_maze = [[" "] * self.__nCol for _ in range(self.__nRow)]
+        # Clear potentially removed symbols ('S', 'E', or 'W')
+        self.__curr_maze = [[' '] * self.__nCol for _ in range(self.__nRow)]
 
         # Update the current maze
         for x in range(self.__nRow):
             for y in range(self.__nCol):
-                symbol = " "
+                symbol = ' '
                 if self.__is_wall((x, y)):
-                    symbol = "W"
+                    symbol = 'W'
                 elif Node(position=(x, y)) in self.solved:
-                    symbol = "X"
+                    symbol = 'X'
                 elif Node(position=(x, y)) in self.unsolved:
-                    symbol = "?"
+                    symbol = '?'
 
                 self.__curr_maze[x][y] = symbol
 
         # Path symbols overwrite wall, solved, and unsolved symbols
         for (x, y) in self.path:
-            self.__curr_maze[x][y] = "P"
+            self.__curr_maze[x][y] = 'P'
 
         # Start and end symbols overwrite everything
-        self.__curr_maze[self.__start[0]][self.__start[1]] = "S"
-        self.__curr_maze[self.__end[0]][self.__end[1]] = "E"
+        self.__curr_maze[self.__start[0]][self.__start[1]] = 'S'
+        self.__curr_maze[self.__end[0]][self.__end[1]] = 'E'
 
-        if self.__settings["enablePrintToConsole"]:
+        if self.__settings['enablePrintToConsole']:
             self.print_maze()
 
         # Update the GUI
         self.__notify_maze_changed(is_rapid_config)
 
     def __update_stats(self):
-        """ Updates some metrics.
+        ''' Updates some metrics.
 
         Args:
             None
 
         Returns:
             None
-        """
-        self.__stats["numUnsolved"] = len(self.unsolved)
-        self.__stats["numSolved"] = len(self.solved)
-        self.__stats["numPath"] = len(self.path)
+        '''
+        self.__stats['numUnsolved'] = len(self.unsolved)
+        self.__stats['numSolved'] = len(self.solved)
+        self.__stats['numPath'] = len(self.path)
 
         if self.is_solving():
-            self.__stats["elapsedTime"] = "{:.3f}".format(
+            self.__stats['elapsedTime'] = '{:.3f}'.format(
                 time.time() - self.__start_time)
 
     def __notify_maze_changed(self, is_rapid_config):
-        """ Notifies the attached view to update its interface based on the new data.
+        ''' Notifies the attached view to update its interface based on the new data.
         Only update nodes that have changed to improve performance.
 
         Args:
@@ -155,7 +156,7 @@ class AStarModel:
 
         Returns:
             None
-        """
+        '''
         if self.__view is not None:
             diff_positions = self.__get_diff_positions()
             self.__view.update_gui(
@@ -164,7 +165,7 @@ class AStarModel:
                 is_rapid_config=is_rapid_config)
 
     def __get_diff_positions(self):
-        """ Returns a list of positions representing the positions that differ between
+        ''' Returns a list of positions representing the positions that differ between
         the current maze and the previous maze.
 
         Args:
@@ -173,7 +174,7 @@ class AStarModel:
         Returns:
             diff_positions::[list]
                 The positions that differ between the current and previous mazes
-        """
+        '''
         diff_positions = []
 
         # Only update nodes that have changed
@@ -184,9 +185,9 @@ class AStarModel:
 
         return diff_positions
 
-    """
+    '''
     GETTERS.
-    """
+    '''
 
     def get_nrow(self):
         return self.__nRow
@@ -212,17 +213,17 @@ class AStarModel:
     def get_setting(self, setting):
         if setting not in self.__settings:
             raise ValueError(
-                "The setting [{}] does not exist.".format(setting))
+                'The setting [{}] does not exist.'.format(setting))
         return self.__settings[setting]
 
     def get_stat(self, stat):
         if stat not in self.__stats:
-            raise ValueError("The stat [{}] does not exist.".format(stat))
+            raise ValueError('The stat [{}] does not exist.'.format(stat))
         return self.__stats[stat]
 
-    """
+    '''
     SETTERS.
-    """
+    '''
 
     def stop_solving(self):
         self.__is_currently_solving = False
@@ -230,42 +231,42 @@ class AStarModel:
     def set_setting(self, setting, val):
         if setting not in self.__settings:
             raise ValueError(
-                "The setting [{}] does not exist.".format(setting))
+                'The setting [{}] does not exist.'.format(setting))
         self.__settings[setting] = val
 
-    """
+    '''
     SETTERS FOR SPECIAL NODES.
-    """
+    '''
 
     def set_start(self, start):
         if self.__is_position_valid(start):
             if not self.__is_wall(start) and start != self.__end:
                 self.__clear_solve_containers()
-                if self.__settings["enablePrintToConsole"]:
-                    print("Setting new start point: {}".format(start))
+                if self.__settings['enablePrintToConsole']:
+                    print('Setting new start point: {}'.format(start))
                 self.__start = start
                 self.__update_maze(is_rapid_config=True)
-            elif self.__settings["enablePrintToConsole"]:
+            elif self.__settings['enablePrintToConsole']:
                 raise ValueError(
-                    "The starting position cannot be the same as the end position or a wall: {}".format(start))
+                    'The starting position cannot be the same as the end position or a wall: {}'.format(start))
         else:
             raise ValueError(
-                "The provided start position is out of bounds for an {} x {} maze: {}".format(self.__nRow, self.__nCol, start))
+                'The provided start position is out of bounds for an {} x {} maze: {}'.format(self.__nRow, self.__nCol, start))
 
     def set_end(self, end):
         if self.__is_position_valid(end):
             if not self.__is_wall(end) and end != self.__start:
                 self.__clear_solve_containers()
-                if self.__settings["enablePrintToConsole"]:
-                    print("Setting new end point: {}".format(end))
+                if self.__settings['enablePrintToConsole']:
+                    print('Setting new end point: {}'.format(end))
                 self.__end = end
                 self.__update_maze(is_rapid_config=True)
-            elif self.__settings["enablePrintToConsole"]:
+            elif self.__settings['enablePrintToConsole']:
                 raise ValueError(
-                    "The end position cannot be the same as the starting position or a wall: {}".format(end))
+                    'The end position cannot be the same as the starting position or a wall: {}'.format(end))
         else:
             raise ValueError(
-                "The provided end position is out of bounds for an {} x {} maze: {}".format(self.__nRow, self.__nCol, end))
+                'The provided end position is out of bounds for an {} x {} maze: {}'.format(self.__nRow, self.__nCol, end))
 
     def set_wall(self, pos, val: bool):
         if self.__is_position_valid(pos):
@@ -273,9 +274,9 @@ class AStarModel:
             if pos != self.__start and pos != self.__end:
                 self.__clear_solve_containers()
 
-                if self.__settings["enablePrintToConsole"]:
-                    print("{} wall: {}".format(
-                        "Setting" if val else "Removing", str(pos)))
+                if self.__settings['enablePrintToConsole']:
+                    print('{} wall: {}'.format(
+                        'Setting' if val else 'Removing', str(pos)))
 
                 x, y = pos
 
@@ -287,56 +288,109 @@ class AStarModel:
 
                 self.__update_maze(is_rapid_config=True)
 
-            elif self.__settings["enablePrintToConsole"]:
+            elif self.__settings['enablePrintToConsole']:
                 raise ValueError(
-                    "You cannot place a wall ontop of a start or end node: {}".format(pos))
+                    'You cannot place a wall ontop of a start or end node: {}'.format(pos))
         else:
             raise ValueError(
-                "The provided wall position is out of bounds for an {} x {} maze: {}".format(self.__nRow, self.__nCol, pos))
+                'The provided wall position is out of bounds for an {} x {} maze: {}'.format(self.__nRow, self.__nCol, pos))
 
     def import_maze_data(self, maze_data):
+        ''' Loads a maze given a maze dictionary object.
+
+        Sets the start, end, and wall nodes.
+        Does not reconfigure the size of the model.
+        Updates the GUI after.
+
+        Args:
+            maze_data::[dict]
+                The imported maze data containing the start, end, and wall positions
+
+        Returns:
+            None
+        '''
         self.__start = tuple(maze_data['start'])
         self.__end = tuple(maze_data['end'])
         self.__walls = set([tuple(wall) for wall in maze_data['walls']])
-        self.__update_maze(is_rapid_config=True)
+        self.__update_maze(is_rapid_config=False)
 
     def __clear_solve_containers(self):
         self.unsolved = set()
         self.solved = set()
         self.path = []
-        self.__stats["elapsedTime"] = 0
+        self.__stats['elapsedTime'] = 0
 
-    """
+    '''
     VALIDATION METHODS.
-    """
+    '''
 
     def __is_position_valid(self, pos):
+        ''' Returns true if the given position is within the model's dimensions and false otherwise.
+
+        Args:
+            pos::[tuple]
+                The position to check
+
+        Returns:
+            [bool]
+                Whether or not the position is within the model's dimensions
+        '''
         return 0 <= pos[0] < self.__nRow and 0 <= pos[1] < self.__nCol
 
     def __is_wall(self, pos):
+        ''' Returns true if the given position is a wall and false otherwise.
+
+        Args:
+            pos::[tuple]
+                The position to check
+
+        Returns:
+            [bool]
+                Whether or not the position is a wall
+        '''
         return pos in self.__walls
 
     def __can_move_to_node(self, node):
+        ''' Returns true if the given node is a valid node to move to and false otherwise.
+
+        Args:
+            node::[AstarNode]
+                The node to check
+
+        Returns:
+            [bool]
+                Whether or not the node is a valid node to move to
+        '''
         # You can move to a node if it is at a valid position and if it is not a wall
         pos = node.position
         return self.__is_position_valid(pos) and not self.__is_wall(pos)
 
-    """
+    '''
     PRINT METHODS.
-    """
+    '''
 
     def print_maze(self):
         [print(row) for row in self.__curr_maze]
         print()
 
     def print_path(self):
-        print("Path: {}".format(" -> ".join(map(str, self.path))))
+        print('Path: {}'.format(' -> '.join(map(str, self.path))))
 
-    """
+    '''
     SEARCH METHODS.
-    """
+    '''
 
     def __calculate_path(self, curNode):
+        ''' Calculates the solved path given the end node.
+        Assigns the path to an instance variable.
+
+        Args:
+            curNode::[AstarNode]
+                The end node that was found
+
+        Returns:
+            None
+        '''
         self.path = []
 
         # Iterate through the parent nodes of the end node until the start node is reached
@@ -347,6 +401,15 @@ class AStarModel:
         self.path.reverse()
 
     def solve(self):
+        ''' Solves the maze.
+
+        Args:
+            None
+
+        Returns:
+            [bool]
+                Whether or not the search successfully reached the end node
+        '''
         self.__is_currently_solving = True
         self.__start_time = time.time()
         self.__clear_solve_containers()
@@ -356,10 +419,10 @@ class AStarModel:
         OFFSETS = [(0, 1), (-1, 0), (1, 0), (0, -1)]
 
         # Add DIAGONAL_OFFSETS to OFFSETS if diagonal movement is allowed
-        if self.__settings["allowDiagonals"]:
+        if self.__settings['allowDiagonals']:
             OFFSETS.extend(DIAGONAL_OFFSETS)
 
-        print("Solving the maze starting at {} and ending at {}.".format(
+        print('Solving the maze starting at {} and ending at {}.'.format(
             self.__start, self.__end))
 
         # Start and end nodes
@@ -373,7 +436,7 @@ class AStarModel:
             self.__update_maze(is_rapid_config=False)
 
             # Get the node with the minimum 'f' value from the unsolved list
-            curNode = min(self.unsolved, key=attrgetter("f"))
+            curNode = min(self.unsolved, key=attrgetter('f'))
 
             # Remove the current node from the unsolved list and append it to the solved list
             self.unsolved.remove(curNode)
@@ -386,7 +449,7 @@ class AStarModel:
                 self.print_path()
                 self.__update_maze(is_rapid_config=False)
                 print(
-                    "A* search completed in {} seconds!\n".format(self.__stats["elapsedTime"]))
+                    'A* search completed in {} seconds!\n'.format(self.__stats['elapsedTime']))
                 return True
 
             # Check adjacent nodes
@@ -425,13 +488,13 @@ class AStarModel:
         # Failed to find a path
         self.stop_solving()
         self.__update_maze(is_rapid_config=False)
-        print("Failed to complete the search in {} seconds.\n".format(
-            self.__stats["elapsedTime"]))
+        print('Failed to complete the search in {} seconds.\n'.format(
+            self.__stats['elapsedTime']))
         return False
 
 
 def main():
-    print("Starting A* search application.\n")
+    print('Starting A* search application.\n')
     model = AStarModel(nRow=10, nCol=10)
     model.set_start((1, 2))
     model.set_end((4, 4))
